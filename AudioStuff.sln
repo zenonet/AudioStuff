@@ -2,6 +2,8 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioStuff", "AudioStuff\AudioStuff.csproj", "{167E1DF9-B6B8-4969-BD4B-D390686DB1DA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AudioPlayer", "AudioPlayer\AudioPlayer.csproj", "{BAA44E19-4D31-4C28-AFB9-B6D38BC058FD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -12,5 +14,9 @@ Global
 		{167E1DF9-B6B8-4969-BD4B-D390686DB1DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{167E1DF9-B6B8-4969-BD4B-D390686DB1DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{167E1DF9-B6B8-4969-BD4B-D390686DB1DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BAA44E19-4D31-4C28-AFB9-B6D38BC058FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BAA44E19-4D31-4C28-AFB9-B6D38BC058FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BAA44E19-4D31-4C28-AFB9-B6D38BC058FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BAA44E19-4D31-4C28-AFB9-B6D38BC058FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
