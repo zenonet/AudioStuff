@@ -1,5 +1,5 @@
-﻿using NAudio.Wave;
-using NAudio.Wave.SampleProviders;
+﻿using System.Runtime.InteropServices;
+using NAudio.Wave;
 
 
 if (args.Length == 0)
@@ -9,18 +9,34 @@ if (args.Length == 0)
 }
 else if (args.Length == 1)
 {
+    string path = Path.GetFullPath(args[0]);
+    if (!File.Exists(path))
+    {
+        Console.WriteLine("File does not exist");
+        return;
+    }
+
     await PlayAudioFile(Path.GetFullPath(args[0]));
 }
 
 
 async Task PlayAudioFile(string path)
 {
-    using AudioFileReader audioFile = new(path);
-    using WaveOutEvent outputDevice = new();
-
     int volumeDisplayCooldown = 0;
-    
-    outputDevice.Init(audioFile);
+
+    AudioFileReader audioFile;
+    using WaveOutEvent outputDevice = new();
+    try
+    {
+        audioFile = new(path);
+        outputDevice.Init(audioFile);
+    }
+    catch (COMException)
+    {
+        Console.WriteLine("Unsupported file format");
+        return;
+    }
+
     outputDevice.Play();
 
     const int barLength = 120;
@@ -29,7 +45,7 @@ async Task PlayAudioFile(string path)
     while (outputDevice.PlaybackState != PlaybackState.Stopped)
     {
         volumeDisplayCooldown--;
-        
+
         // Display progress
         await Task.Delay(1);
         float progress = (float) audioFile.Position / audioFile.Length;
@@ -50,20 +66,14 @@ async Task PlayAudioFile(string path)
         Console.Write($" {audioFile.TotalTime:mm\\:ss} ");
 
         if (volumeDisplayCooldown > 0)
-        {
             Console.Write($"\nVolume: {outputDevice.Volume*100:0}   ");
-        }
         else
-        {
             Console.Write("\n" + new string(' ', 120));
-        }
 
         if (outputDevice.PlaybackState == PlaybackState.Paused)
             Console.Write("\nPaused");
         else
             Console.Write("\n" + new string(' ', 120));
-
-        
 
         if (Console.KeyAvailable)
         {
@@ -78,65 +88,33 @@ async Task PlayAudioFile(string path)
                     outputDevice.Play();
                     break;
                 case ConsoleKey.UpArrow:
-                    if(outputDevice.Volume > 0.99f) break;
+                    if (outputDevice.Volume > 0.99f) break;
                     outputDevice.Volume += 0.01f;
                     volumeDisplayCooldown = 150;
                     break;
                 case ConsoleKey.DownArrow:
-                    if(outputDevice.Volume < 0.01f) break;
+                    if (outputDevice.Volume < 0.01f) break;
                     outputDevice.Volume -= 0.01f;
                     volumeDisplayCooldown = 150;
                     break;
+
+                case ConsoleKey.RightArrow:
+                    if (audioFile.TotalTime.TotalSeconds - audioFile.CurrentTime.TotalSeconds < 5f) audioFile.CurrentTime = audioFile.TotalTime;
+                    audioFile.CurrentTime += TimeSpan.FromSeconds(5);
+                    break;
+                case ConsoleKey.LeftArrow:
+                    if (audioFile.CurrentTime.TotalSeconds < 5f) audioFile.CurrentTime = TimeSpan.Zero;
+                    audioFile.CurrentTime -= TimeSpan.FromSeconds(5);
+                    break;
+                
+                case ConsoleKey.Q:
+                    Console.WriteLine("\nQuitting...");
+                    await audioFile.DisposeAsync();
+                    return;
             }
         }
-        //outputDevice.Pause();
     }
 
     Console.CursorVisible = true;
-}
-
-return;
-
-
-class SavingWaveProvider : IWaveProvider, IDisposable
-{
-    private readonly IWaveProvider sourceWaveProvider;
-    private readonly WaveFileWriter writer;
-    private bool isWriterDisposed;
-
-    public SavingWaveProvider(IWaveProvider sourceWaveProvider, string wavFilePath)
-    {
-        this.sourceWaveProvider = sourceWaveProvider;
-        writer = new WaveFileWriter(wavFilePath, sourceWaveProvider.WaveFormat);
-    }
-
-    public int Read(byte[] buffer, int offset, int count)
-    {
-        var read = sourceWaveProvider.Read(buffer, offset, count);
-        if (count > 0 && !isWriterDisposed)
-        {
-            writer.Write(buffer, offset, read);
-        }
-
-        if (count == 0)
-        {
-            Dispose(); // auto-dispose in case users forget
-        }
-
-        return read;
-    }
-
-    public WaveFormat WaveFormat
-    {
-        get { return sourceWaveProvider.WaveFormat; }
-    }
-
-    public void Dispose()
-    {
-        if (!isWriterDisposed)
-        {
-            isWriterDisposed = true;
-            writer.Dispose();
-        }
-    }
+    await audioFile.DisposeAsync();
 }
